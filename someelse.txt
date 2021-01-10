@@ -1,0 +1,1 @@
+"postinstall": "cd ./client && yarn"-->"cd ./client && npm install"
