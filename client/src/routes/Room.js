@@ -131,9 +131,55 @@ const Room = (props) => {
     return peer;
   }
   const fileChunks = [];
+
+  /* Dynamic Hybrid switching/routing(Dynamicsism)-->done */
+
+  function hybridReceivingData(data) {
+    if (data.toString().includes("withoutchunking")) {
+      console.log("Receiver w/o chunking");
+      if (data.toString().includes("done")) {
+        setGotFile(true);
+        const parsed = JSON.parse(data);
+        fileNameRef.current = parsed.fileName;
+        console.log(fileNameRef.current);
+        //window.location.reload(); //multiple duplicate prob::as if we send 1 file-->download then later again send same file(w/o selecting/(or) with selecting or so) 2 files comes in download(not shows in console though) so on.....(but gives error --> events.js:142 Uncaught Error: Unhandled error. (undefined)
+        // at Peer.emit (events.js:142)
+        // at index.js:471)
+        return;
+      } else {
+        worker.postMessage(data);
+      }
+    }
+    //if (data.toString().includes("withchunking")) {
+    if (data.toString().includes("done")) {
+      //with chuncking
+      console.log("Receiver w chunking");
+      //data.toString() === "done!"
+      // Once, all the chunks are received, combine them to form a Blob
+      const file = new Blob(fileChunks);
+      console.log("Received", file);
+      const parsed = JSON.parse(data);
+      fileNameRef.current = parsed.fileName;
+      // Download the received file using downloadjs
+      console.log(fileNameRef.current);
+      //download(file, `${fileNameRef.current}`); //'test.png'
+
+      setGotFile(true);
+      //window.location.reload();
+      return;
+      // const parsed = JSON.parse(data);
+      // fileNameRef.current = parsed.fileName;
+    } else {
+      // Keep appending various file chunks
+      fileChunks.push(data);
+      worker.postMessage(data);
+    }
+    //}
+  }
   function handleReceivingData(data) {
     /*For file less than 50kb & w/o chunking */
 
+    // simple original one(less than 50kb)
     // if (data.toString().includes("done")) {
     //   setGotFile(true);
     //   const parsed = JSON.parse(data);
@@ -142,7 +188,7 @@ const Room = (props) => {
     //   worker.postMessage(data);
     // }
 
-    // Convert the file back to Blob
+    // Convert the file back to Blob // (common for both with and(&) without chunking using non simple original one )
     //const file = new Blob([data]);
     //console.log("Received", file);
     // Download the received file using downloadjs
@@ -155,7 +201,48 @@ const Room = (props) => {
     //   console.log(parsed);
     // }
 
+    //hybridReceivingData(data);// calling a function inside this function can slow done the performance and file after selecting not showing immediately if code is called from hybrid module, writting code in here can fast and shows up file quickly
+
+    // if (data.toString().includes("done")) {
+    //   //data.toString() === "done!"
+    //   // Once, all the chunks are received, combine them to form a Blob
+    //   const file = new Blob(fileChunks);
+    //   console.log("Received", file);
+    //   const parsed = JSON.parse(data);
+    //   fileNameRef.current = parsed.fileName;
+    //   // Download the received file using downloadjs
+    //   console.log(fileNameRef.current);
+    //   //download(file, `${fileNameRef.current}`); //'test.png'
+
+    //   setGotFile(true);
+    //   // const parsed = JSON.parse(data);
+    //   // fileNameRef.current = parsed.fileName;
+    // } else {
+    //   // Keep appending various file chunks
+    //   fileChunks.push(data);
+    //   worker.postMessage(data);
+    // }
+    /**********************************************************************************************************************************/
+    if (data.toString().includes("withoutchunking")) {
+      console.log("Receiver w/o chunking");
+      if (data.toString().includes("done")) {
+        setGotFile(true);
+        const parsed = JSON.parse(data);
+        fileNameRef.current = parsed.fileName;
+        console.log(fileNameRef.current);
+        //window.location.reload(); //multiple duplicate prob::as if we send 1 file-->download then later again send same file(w/o selecting/(or) with selecting or so) 2 files comes in download(not shows in console though) so on.....(but gives error --> events.js:142 Uncaught Error: Unhandled error. (undefined)
+        // at Peer.emit (events.js:142)
+        // at index.js:471)
+        return;
+      } else {
+        worker.postMessage(data);
+      }
+    }
+    //if (data.toString().includes("withchunking")) {
     if (data.toString().includes("done")) {
+      //as need to check for every chunk so no checking for "withchunking" can send that with first packet and(&) loop through till last packets("done")
+      //with chuncking
+      console.log("Receiver w chunking");
       //data.toString() === "done!"
       // Once, all the chunks are received, combine them to form a Blob
       const file = new Blob(fileChunks);
@@ -167,6 +254,8 @@ const Room = (props) => {
       //download(file, `${fileNameRef.current}`); //'test.png'
 
       setGotFile(true);
+      //window.location.reload();
+      return;
       // const parsed = JSON.parse(data);
       // fileNameRef.current = parsed.fileName;
     } else {
@@ -174,6 +263,7 @@ const Room = (props) => {
       fileChunks.push(data);
       worker.postMessage(data);
     }
+    //}
   }
 
   function download() {
@@ -190,16 +280,83 @@ const Room = (props) => {
     setFile(e.target.files[0]);
   }
 
-  function sendFile() {
+  function hybridsendFile() {
     const peer = peerRef.current;
     const stream = file.stream();
     const reader = stream.getReader();
+    if (Math.abs(file.size / 1000) < 50) {
+      //Math.floor()
+      //less than 50kb
+      /* w/o chuncking sending files(less than 50kb) & Sending more than 50kb files */
+      console.log("Sender w/o chunking");
+      file.arrayBuffer().then((buffer) => {
+        // Off goes the file!
+        peer.send(buffer);
+        peer.write(
+          JSON.stringify({
+            withoutchunking: true,
+            done: true,
+            fileName: file.name,
+          })
+        );
+        //file = "";//assignment to constant error
+        //setFile("");//not working just reload sender,receiver so multiple duplicate prob not comes
+        //return;
+      });
+    } else {
+      //more than 50kb
+      /* Sending more than 50kb files spliting in chunks(with chuncking) */
+      // We convert the file from Blob to ArrayBuffer
+      console.log("Sender w chunking");
+      file.arrayBuffer().then((buffer) => {
+        /**
+         * A chunkSize (in Bytes) is set here
+         * I have it set to 16KB
+         */
+        const chunkSize = 16 * 1024;
 
+        // Keep chunking, and sending the chunks to the other peer
+        while (buffer.byteLength) {
+          const chunk = buffer.slice(0, chunkSize);
+          buffer = buffer.slice(chunkSize, buffer.byteLength);
+
+          // Off goes the chunk!
+          peer.send(chunk);
+        }
+
+        //peer.send(JSON.stringify({ init: true, fileName: file.name }));
+
+        // End message to signal that all chunks have been sent
+        //peer.send("done!");
+        peer.send(
+          JSON.stringify({
+            done: true,
+            fileName: file.name,
+            withchunking: true,
+          })
+        );
+        //file = "";//assignment to constant error
+        //setFile("");//not working just reload sender,receiver so multiple duplicate prob not comes
+        //return;
+      });
+    }
+  }
+
+  function sendFile() {
+    // const peer = peerRef.current;
+    // const stream = file.stream();
+    // const reader = stream.getReader();
+
+    //console.log(file.size);
+    console.log(Math.abs(file.size / 1000));
+    //hybridsendFile();// calling a function inside this function can slow done the performance and file after selecting not showing immediately if code is called from hybrid module, writting code in here can fast and shows up file quickly
+
+    // simple original one(less than 50kb)
     // reader.read().then((obj) => {
     //   handlereading(obj.done, obj.value);
     // });
 
-    /* w/o chuncking sending files(less than 50kb) & Sending more than 50kb files  */
+    /* w/o chuncking sending files(less than 50kb) & Sending more than 50kb files(but not possibile for very large files)  */
     // file.arrayBuffer().then((buffer) => {
     //   // Off goes the file!
     //   peer.send(buffer);
@@ -207,29 +364,30 @@ const Room = (props) => {
 
     /* Sending more than 50kb files spliting in chunks(with chuncking) */
     // We convert the file from Blob to ArrayBuffer
-    file.arrayBuffer().then((buffer) => {
-      /**
-       * A chunkSize (in Bytes) is set here
-       * I have it set to 16KB
-       */
-      const chunkSize = 16 * 1024;
+    // file.arrayBuffer().then((buffer) => {
+    //   /**
+    //    * A chunkSize (in Bytes) is set here
+    //    * I have it set to 16KB
+    //    */
+    //   const chunkSize = 16 * 1024;
 
-      // Keep chunking, and sending the chunks to the other peer
-      while (buffer.byteLength) {
-        const chunk = buffer.slice(0, chunkSize);
-        buffer = buffer.slice(chunkSize, buffer.byteLength);
+    //   // Keep chunking, and sending the chunks to the other peer
+    //   while (buffer.byteLength) {
+    //     const chunk = buffer.slice(0, chunkSize);
+    //     buffer = buffer.slice(chunkSize, buffer.byteLength);
 
-        // Off goes the chunk!
-        peer.send(chunk);
-      }
+    //     // Off goes the chunk!
+    //     peer.send(chunk);
+    //   }
 
-      //peer.send(JSON.stringify({ init: true, fileName: file.name }));
+    //   //peer.send(JSON.stringify({ init: true, fileName: file.name }));
 
-      // End message to signal that all chunks have been sent
-      //peer.send("done!");
-      peer.send(JSON.stringify({ done: true, fileName: file.name }));
-    });
+    //   // End message to signal that all chunks have been sent
+    //   //peer.send("done!");
+    //   peer.send(JSON.stringify({ done: true, fileName: file.name }));
+    // });
 
+    // simple original one(less than 50kb)
     // function handlereading(done, value) {
     //   if (done) {
     //     peer.write(JSON.stringify({ done: true, fileName: file.name }));
@@ -243,8 +401,69 @@ const Room = (props) => {
     //     handlereading(obj.done, obj.value);
     //   });
     // }
+    /**********************************************************************************************************************************/
+    const peer = peerRef.current;
+    const stream = file.stream();
+    const reader = stream.getReader();
+    if (Math.abs(file.size / 1000) < 50) {
+      //Math.floor()
+      //less than 50kb
+      /* w/o chuncking sending files(less than 50kb) & Sending more than 50kb files */
+      console.log("Sender w/o chunking");
+      file.arrayBuffer().then((buffer) => {
+        // Off goes the file!
+        peer.send(buffer);
+        peer.write(
+          JSON.stringify({
+            withoutchunking: true,
+            done: true,
+            fileName: file.name,
+          })
+        );
+        //file = "";//assignment to constant error
+        //setFile("");//not working just reload sender,receiver so multiple duplicate prob not comes
+        //return;
+      });
+    } else {
+      //more than 50kb
+      /* Sending more than 50kb files spliting in chunks(with chuncking) */
+      // We convert the file from Blob to ArrayBuffer
+      console.log("Sender w chunking");
+      file.arrayBuffer().then((buffer) => {
+        /**
+         * A chunkSize (in Bytes) is set here
+         * I have it set to 16KB
+         */
+        const chunkSize = 16 * 1024;
+
+        // Keep chunking, and sending the chunks to the other peer
+        while (buffer.byteLength) {
+          const chunk = buffer.slice(0, chunkSize);
+          buffer = buffer.slice(chunkSize, buffer.byteLength);
+
+          // Off goes the chunk!
+          peer.send(chunk);
+        }
+
+        //peer.send(JSON.stringify({ init: true, fileName: file.name }));
+
+        // End message to signal that all chunks have been sent
+        //peer.send("done!");
+        peer.send(
+          JSON.stringify({
+            done: true,
+            fileName: file.name,
+            withchunking: true,
+          })
+        );
+        //file = "";//assignment to constant error
+        //setFile("");//not working just reload sender,receiver so multiple duplicate prob not comes
+        //return;
+      });
+    }
   }
 
+  // function helper(){
   //   function sliceandsend(file, sendfunction) {//send func
   //     var fileSize = file.size;
   //     var name = file.name;
@@ -277,6 +496,7 @@ const Room = (props) => {
   //     }
   //     readchunk();
   //   }
+  // }
 
   let body;
   if (connectionEstablished) {
@@ -284,7 +504,7 @@ const Room = (props) => {
       <div>
         <input onChange={selectFile} type="file" />
         <button onClick={sendFile}>Send file</button>
-        <div className="blank"></div>
+        {/* <div className="blank"></div> */}
         <div className="">
           <Lottie options={anim33} />
         </div>
@@ -316,12 +536,13 @@ const Room = (props) => {
           the file?
         </span>
         {/* <br /> */}
-        <button onClick={download}>Yes</button>
+        {/* <button onClick={download}>Yes</button> */}
         {/* room */}
         {/* <div className="blank"></div> */}
         <div className="">
           <Lottie options={anim22} />
         </div>
+        <button onClick={download}>Yes</button>
       </div>
     );
   }
