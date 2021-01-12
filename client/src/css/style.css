@@ -1,0 +1,168 @@
+/* Keyframes */
+/* parallax pixel star effect*/
+@keyframes parallax {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100vh);
+  }
+}
+.stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  pointer-events: none;
+  box-shadow: 27vw 27vh lightblue, 7vw 73vh lightblue, 41vw 64vh lightblue,
+    37vw 84vh lightblue, 94vw 22vh lightblue, 18vw 41vh lightblue,
+    87vw 82vh lightblue, 94vw 5vh lightblue, 68vw 1vh lightblue,
+    11vw 23vh lightblue, 45vw 72vh lightblue, 65vw 72vh lightblue,
+    10vw 32vh lightblue, 14vw 20vh lightblue, 65vw 98vh lightblue,
+    26vw 30vh lightblue, 35vw 54vh lightblue, 25vw 79vh lightblue,
+    39vw 8vh lightblue, 69vw 73vh lightblue, 77vw 17vh lightblue,
+    45vw 32vh lightblue, 59vw 32vh lightblue, 18vw 54vh lightblue,
+    97vw 57vh lightblue, 70vw 15vh lightblue, 60vw 96vh lightblue,
+    14vw 16vh lightblue, 99vw 82vh lightblue, 30vw 32vh lightblue,
+    73vw 82vh lightblue, 15vw 10vh lightblue, 55vw 83vh lightblue,
+    2vw 39vh lightblue, 55vw 79vh lightblue, 53vw 2vh lightblue,
+    90vw 18vh lightblue, 71vw 15vh lightblue, 29vw 81vh lightblue,
+    93vw 22vh lightblue, 21vw 62vh lightblue, 89vw 62vh lightblue,
+    62vw 94vh lightblue, 97vw 19vh lightblue, 83vw 27vh lightblue,
+    95vw 96vh lightblue, 5vw 85vh lightblue, 58vw 17vh lightblue,
+    38vw 65vh lightblue, 65vw 76vh lightblue, 4vw 52vh lightblue,
+    49vw 59vh lightblue, 5vw 78vh lightblue, 89vw 64vh lightblue,
+    43vw 16vh lightblue, 17vw 22vh lightblue, 89vw 81vh lightblue,
+    87vw 94vh lightblue, 69vw 72vh lightblue, 42vw 58vh lightblue,
+    22vw 68vh lightblue, 43vw 41vh lightblue, 16vw 48vh lightblue,
+    68vw 48vh lightblue, 15vw 10vh lightblue, 64vw 4vh lightblue,
+    62vw 80vh lightblue, 92vw 31vh lightblue, 61vw 82vh lightblue,
+    14vw 89vh lightblue, 63vw 71vh lightblue, 34vw 99vh lightblue,
+    90vw 3vh lightblue, 69vw 10vh lightblue, 64vw 56vh lightblue,
+    54vw 27vh lightblue, 38vw 40vh lightblue, 30vw 16vh lightblue,
+    19vw 12vh lightblue, 85vw 77vh lightblue, 59vw 98vh lightblue,
+    8vw 74vh lightblue, 66vw 88vh lightblue, 66vw 29vh lightblue,
+    27vw 76vh lightblue, 37vw 1vh lightblue, 65vw 45vh lightblue,
+    77vw 100vh lightblue, 46vw 26vh lightblue, 81vw 2vh lightblue,
+    83vw 32vh lightblue, 48vw 56vh lightblue, 31vw 16vh lightblue,
+    7vw 87vh lightblue, 51vw 78vh lightblue, 68vw 4vh lightblue,
+    16vw 22vh lightblue, 38vw 72vh lightblue, 2vw 77vh lightblue,
+    91vw 32vh lightblue, 92vw 1vh lightblue;
+  animation: parallax 25s linear infinite;
+  border-radius: 50%;
+}
+.stars:after {
+  content: " ";
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  top: 100vh;
+  box-shadow: 27vw 27vh lightblue, 7vw 73vh lightblue, 41vw 64vh lightblue,
+    37vw 84vh lightblue, 94vw 22vh lightblue, 18vw 41vh lightblue,
+    87vw 82vh lightblue, 94vw 5vh lightblue, 68vw 1vh lightblue,
+    11vw 23vh lightblue, 45vw 72vh lightblue, 65vw 72vh lightblue,
+    10vw 32vh lightblue, 14vw 20vh lightblue, 65vw 98vh lightblue,
+    26vw 30vh lightblue, 35vw 54vh lightblue, 25vw 79vh lightblue,
+    39vw 8vh lightblue, 69vw 73vh lightblue, 77vw 17vh lightblue,
+    45vw 32vh lightblue, 59vw 32vh lightblue, 18vw 54vh lightblue,
+    97vw 57vh lightblue, 70vw 15vh lightblue, 60vw 96vh lightblue,
+    14vw 16vh lightblue, 99vw 82vh lightblue, 30vw 32vh lightblue,
+    73vw 82vh lightblue, 15vw 10vh lightblue, 55vw 83vh lightblue,
+    2vw 39vh lightblue, 55vw 79vh lightblue, 53vw 2vh lightblue,
+    90vw 18vh lightblue, 71vw 15vh lightblue, 29vw 81vh lightblue,
+    93vw 22vh lightblue, 21vw 62vh lightblue, 89vw 62vh lightblue,
+    62vw 94vh lightblue, 97vw 19vh lightblue, 83vw 27vh lightblue,
+    95vw 96vh lightblue, 5vw 85vh lightblue, 58vw 17vh lightblue,
+    38vw 65vh lightblue, 65vw 76vh lightblue, 4vw 52vh lightblue,
+    49vw 59vh lightblue, 5vw 78vh lightblue, 89vw 64vh lightblue,
+    43vw 16vh lightblue, 17vw 22vh lightblue, 89vw 81vh lightblue,
+    87vw 94vh lightblue, 69vw 72vh lightblue, 42vw 58vh lightblue,
+    22vw 68vh lightblue, 43vw 41vh lightblue, 16vw 48vh lightblue,
+    68vw 48vh lightblue, 15vw 10vh lightblue, 64vw 4vh lightblue,
+    62vw 80vh lightblue, 92vw 31vh lightblue, 61vw 82vh lightblue,
+    14vw 89vh lightblue, 63vw 71vh lightblue, 34vw 99vh lightblue,
+    90vw 3vh lightblue, 69vw 10vh lightblue, 64vw 56vh lightblue,
+    54vw 27vh lightblue, 38vw 40vh lightblue, 30vw 16vh lightblue,
+    19vw 12vh lightblue, 85vw 77vh lightblue, 59vw 98vh lightblue,
+    8vw 74vh lightblue, 66vw 88vh lightblue, 66vw 29vh lightblue,
+    27vw 76vh lightblue, 37vw 1vh lightblue, 65vw 45vh lightblue,
+    77vw 100vh lightblue, 46vw 26vh lightblue, 81vw 2vh lightblue,
+    83vw 32vh lightblue, 48vw 56vh lightblue, 31vw 16vh lightblue,
+    7vw 87vh lightblue, 51vw 78vh lightblue, 68vw 4vh lightblue,
+    16vw 22vh lightblue, 38vw 72vh lightblue, 2vw 77vh lightblue,
+    91vw 32vh lightblue, 92vw 1vh lightblue;
+  border-radius: 50%;
+}
+
+/*Gradient background animation*/
+
+/*
+  .blank {
+      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+  }
+  
+  @keyframes gradient {
+      0% {
+          background-position: 0% 50%;
+      }
+      50% {
+          background-position: 100% 50%;
+      }
+      100% {
+          background-position: 0% 50%;
+      }
+  }
+  */
+
+.blank {
+  /*.gradient*/
+  position: absolute;
+  height: 1000px;
+  width: 1820px;
+  border: 1px solid black;
+  font-size: 30px;
+  background: linear-gradient(130deg, brown, black, yellow);
+  opacity: 0.5;
+  background-size: 100% 100%;
+  -webkit-animation: Animation 5s ease infinite;
+  -moz-animation: Animation 5s ease infinite;
+  animation: Animation 5s ease infinite;
+}
+
+@-webkit-keyframes Animation {
+  0% {
+    background-position: 10% 0%;
+  }
+  50% {
+    background-position: 91% 100%;
+  }
+  100% {
+    background-position: 10% 0%;
+  }
+}
+@-moz-keyframes Animation {
+  0% {
+    background-position: 10% 0%;
+  }
+  50% {
+    background-position: 91% 100%;
+  }
+  100% {
+    background-position: 10% 0%;
+  }
+}
+@keyframes Animation {
+  0% {
+    background-position: 10% 0%;
+  }
+  50% {
+    background-position: 91% 100%;
+  }
+  100% {
+    background-position: 10% 0%;
+  }
+}
