@@ -12,6 +12,9 @@ import anim3 from "../assets/lotties/25081-sending.json";
 
 import "../css/style.css";
 
+import axios from "axios";
+import Base64Downloader from "react-base64-downloader";
+
 const anim00 = {
   loop: true,
   autoplay: true,
@@ -71,6 +74,12 @@ const Room = (props) => {
   const fileNameRef = useRef("");
 
   const roomID = props.match.params.roomID;
+  const [videoSrc, setvideoSrc] = useState("");
+  const [audioSrc, setaudioSrc] = useState("");
+
+  const [fileData, setFileData] = useState({});
+  const [originalImg, setOriginalImg] = useState("");
+  const [decryptDone, setDecryptDone] = useState(false);
 
   useEffect(() => {
     socketRef.current = io.connect(
@@ -179,60 +188,17 @@ const Room = (props) => {
   function handleReceivingData(data) {
     /*For file less than 50kb & w/o chunking */
 
-    // simple original one(less than 50kb)
-    // if (data.toString().includes("done")) {
-    //   setGotFile(true);
-    //   const parsed = JSON.parse(data);
-    //   fileNameRef.current = parsed.fileName;
-    // } else {
-    //   worker.postMessage(data);
-    // }
-
-    // Convert the file back to Blob // (common for both with and(&) without chunking using non simple original one )
-    //const file = new Blob([data]);
-    //console.log("Received", file);
-    // Download the received file using downloadjs
-    //download(file, "test.png");
-
-    /*For file more than 50mb & with chunking */
-    // if (data.toString().includes("init")) {
-    //   const parsed = JSON.parse(data);
-    //   fileNameRef.current = parsed.fileName;
-    //   console.log(parsed);
-    // }
-
-    //hybridReceivingData(data);// calling a function inside this function can slow done the performance and file after selecting not showing immediately if code is called from hybrid module, writting code in here can fast and shows up file quickly
-
-    // if (data.toString().includes("done")) {
-    //   //data.toString() === "done!"
-    //   // Once, all the chunks are received, combine them to form a Blob
-    //   const file = new Blob(fileChunks);
-    //   console.log("Received", file);
-    //   const parsed = JSON.parse(data);
-    //   fileNameRef.current = parsed.fileName;
-    //   // Download the received file using downloadjs
-    //   console.log(fileNameRef.current);
-    //   //download(file, `${fileNameRef.current}`); //'test.png'
-
-    //   setGotFile(true);
-    //   // const parsed = JSON.parse(data);
-    //   // fileNameRef.current = parsed.fileName;
-    // } else {
-    //   // Keep appending various file chunks
-    //   fileChunks.push(data);
-    //   worker.postMessage(data);
-    // }
     /**********************************************************************************************************************************/
     if (data.toString().includes("withoutchunking")) {
       console.log("Receiver w/o chunking");
       if (data.toString().includes("done")) {
         setGotFile(true);
         const parsed = JSON.parse(data);
+        console.log(parsed);
+        setFileData(parsed.filedata);
         fileNameRef.current = parsed.fileName;
         console.log(fileNameRef.current);
-        //window.location.reload(); //multiple duplicate prob::as if we send 1 file-->download then later again send same file(w/o selecting/(or) with selecting or so) 2 files comes in download(not shows in console though) so on.....(but gives error --> events.js:142 Uncaught Error: Unhandled error. (undefined)
-        // at Peer.emit (events.js:142)
-        // at index.js:471)
+
         return;
       } else {
         worker.postMessage(data);
@@ -251,13 +217,10 @@ const Room = (props) => {
       fileNameRef.current = parsed.fileName;
       // Download the received file using downloadjs
       console.log(fileNameRef.current);
-      //download(file, `${fileNameRef.current}`); //'test.png'
 
       setGotFile(true);
-      //window.location.reload();
+
       return;
-      // const parsed = JSON.parse(data);
-      // fileNameRef.current = parsed.fileName;
     } else {
       // Keep appending various file chunks
       fileChunks.push(data);
@@ -299,9 +262,6 @@ const Room = (props) => {
             fileName: file.name,
           })
         );
-        //file = "";//assignment to constant error
-        //setFile("");//not working just reload sender,receiver so multiple duplicate prob not comes
-        //return;
       });
     } else {
       //more than 50kb
@@ -324,10 +284,6 @@ const Room = (props) => {
           peer.send(chunk);
         }
 
-        //peer.send(JSON.stringify({ init: true, fileName: file.name }));
-
-        // End message to signal that all chunks have been sent
-        //peer.send("done!");
         peer.send(
           JSON.stringify({
             done: true,
@@ -335,72 +291,47 @@ const Room = (props) => {
             withchunking: true,
           })
         );
-        //file = "";//assignment to constant error
-        //setFile("");//not working just reload sender,receiver so multiple duplicate prob not comes
-        //return;
       });
     }
   }
 
+  function getBase64(file, cb) {
+    let reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function () {
+      cb(reader.result);
+    };
+    reader.onerror = function (error) {
+      console.log("Error: ", error);
+    };
+  }
+
+  function decrypt() {
+    console.log(fileData);
+    axios
+      .post(`http://localhost:5000/decryption`, {
+        fileData,
+      })
+      .then((response) => {
+        console.log(response.data);
+        setOriginalImg(
+          response.data.original.substring(2, response.data.original.length - 1)
+        );
+        setDecryptDone(true);
+        setGotFile(false);
+      });
+
+    // fetch("http://localhost:5000/decryption", {
+    //   method: "post",
+    //   body: fileData,
+    // }).then(function (response) {
+    //   console.log(response.data);
+    // });
+  }
+
   function sendFile() {
-    // const peer = peerRef.current;
-    // const stream = file.stream();
-    // const reader = stream.getReader();
-
-    //console.log(file.size);
     console.log(Math.abs(file.size / 1000));
-    //hybridsendFile();// calling a function inside this function can slow done the performance and file after selecting not showing immediately if code is called from hybrid module, writting code in here can fast and shows up file quickly
 
-    // simple original one(less than 50kb)
-    // reader.read().then((obj) => {
-    //   handlereading(obj.done, obj.value);
-    // });
-
-    /* w/o chuncking sending files(less than 50kb) & Sending more than 50kb files(but not possibile for very large files)  */
-    // file.arrayBuffer().then((buffer) => {
-    //   // Off goes the file!
-    //   peer.send(buffer);
-    // });
-
-    /* Sending more than 50kb files spliting in chunks(with chuncking) */
-    // We convert the file from Blob to ArrayBuffer
-    // file.arrayBuffer().then((buffer) => {
-    //   /**
-    //    * A chunkSize (in Bytes) is set here
-    //    * I have it set to 16KB
-    //    */
-    //   const chunkSize = 16 * 1024;
-
-    //   // Keep chunking, and sending the chunks to the other peer
-    //   while (buffer.byteLength) {
-    //     const chunk = buffer.slice(0, chunkSize);
-    //     buffer = buffer.slice(chunkSize, buffer.byteLength);
-
-    //     // Off goes the chunk!
-    //     peer.send(chunk);
-    //   }
-
-    //   //peer.send(JSON.stringify({ init: true, fileName: file.name }));
-
-    //   // End message to signal that all chunks have been sent
-    //   //peer.send("done!");
-    //   peer.send(JSON.stringify({ done: true, fileName: file.name }));
-    // });
-
-    // simple original one(less than 50kb)
-    // function handlereading(done, value) {
-    //   if (done) {
-    //     peer.write(JSON.stringify({ done: true, fileName: file.name }));
-    //     return;
-    //   }
-
-    //   //peer.write(value);//for less than 50mb
-    //   //peer.send(value); //for more than 50mb that too to some extend based on ram
-
-    //   reader.read().then((obj) => {
-    //     handlereading(obj.done, obj.value);
-    //   });
-    // }
     /**********************************************************************************************************************************/
     const peer = peerRef.current;
     const stream = file.stream();
@@ -410,19 +341,39 @@ const Room = (props) => {
       //less than 50kb
       /* w/o chuncking sending files(less than 50kb) & Sending more than 50kb files */
       console.log("Sender w/o chunking");
-      file.arrayBuffer().then((buffer) => {
-        // Off goes the file!
-        peer.send(buffer);
-        peer.write(
-          JSON.stringify({
-            withoutchunking: true,
-            done: true,
-            fileName: file.name,
+      console.log(file);
+
+      getBase64(file, (result) => {
+        //console.log(result);
+        axios
+          .post(`http://localhost:5000/encryption`, {
+            img: result.substring(result.indexOf(",") + 1),
           })
-        );
-        //file = "";//assignment to constant error
-        //setFile("");//not working just reload sender,receiver so multiple duplicate prob not comes
-        //return;
+          .then((response) => {
+            console.log(response.data);
+
+            file.arrayBuffer().then((buffer) => {
+              // Off goes the file!
+
+              console.log(buffer);
+              peer.send(buffer);
+              peer.write(
+                JSON.stringify({
+                  withoutchunking: true,
+                  done: true,
+                  fileName: file.name,
+                  filedata: response.data,
+                })
+              );
+            });
+          });
+
+        // fetch("http://localhost:5000/encryption", {
+        //   method: "post",
+        //   body: { img: result.substring(result.indexOf(",") + 1) },
+        // }).then(function (response) {
+        //   console.log(response.data);
+        // });
       });
     } else {
       //more than 50kb
@@ -445,10 +396,6 @@ const Room = (props) => {
           peer.send(chunk);
         }
 
-        //peer.send(JSON.stringify({ init: true, fileName: file.name }));
-
-        // End message to signal that all chunks have been sent
-        //peer.send("done!");
         peer.send(
           JSON.stringify({
             done: true,
@@ -456,47 +403,9 @@ const Room = (props) => {
             withchunking: true,
           })
         );
-        //file = "";//assignment to constant error
-        //setFile("");//not working just reload sender,receiver so multiple duplicate prob not comes
-        //return;
       });
     }
   }
-
-  // function helper(){
-  //   function sliceandsend(file, sendfunction) {//send func
-  //     var fileSize = file.size;
-  //     var name = file.name;
-  //     var mime = file.type;
-  //     var chunkSize = 64 * 1024; // bytes
-  //     var offset = 0;
-
-  //  function readchunk() {//send func
-  //     var r = new FileReader();
-  //     var blob = file.slice(offset, chunkSize + offset);
-  //     r.onload = function(evt) {
-  //         if (!evt.target.error) {
-  //             offset += chunkSize;
-  //             console.log("sending: " + (offset / fileSize) * 100 + "%");
-  //             if (offset >= fileSize) {
-  //                 con.send(evt.target.result); ///final chunk
-  //                 console.log("Done reading file " + name + " " + mime);
-  //                 return;
-  //             }
-  //             else {
-  //                 con.send(evt.target.result);
-  //             }
-  //         } else {
-  //             console.log("Read error: " + evt.target.error);
-  //             return;
-  //         }
-  //         readchunk();
-  //        };
-  //         r.readAsArrayBuffer(blob);
-  //     }
-  //     readchunk();
-  //   }
-  // }
 
   let body;
   if (connectionEstablished) {
@@ -527,29 +436,62 @@ const Room = (props) => {
     );
   }
 
-  let downloadPrompt;
+  let downloadPrompt, decryptPrompt;
   if (gotFile) {
-    downloadPrompt = (
+    decryptPrompt = (
       <div>
         <span>
-          You have received a file from a Central. Would you like to download
-          the file?
+          You have received a file from a Central. Would you like to decrypt the
+          file?
         </span>
-        {/* <br /> */}
-        {/* <button onClick={download}>Yes</button> */}
-        {/* room */}
-        {/* <div className="blank"></div> */}
+
         <div className="">
           <Lottie options={anim22} />
         </div>
         <button onClick={download}>Yes</button>
+        <button onClick={decrypt}>Decrypt</button>
       </div>
     );
+  }
+
+  if (decryptDone) {
+    downloadPrompt = (
+      <div>
+        <span>
+          You have Decrypted the file. Would you like to download the file?
+        </span>
+        <div className="">
+          <Lottie options={anim22} />
+        </div>
+        <Base64Downloader
+          base64={"data:image/png;base64," + originalImg}
+          //downloadName="1x1_red_pixel"
+          Tag="a"
+          extraAttributes={{ href: "javascript:;" }}
+          //className="my-class-name"
+          style={{ color: "orange" }}
+          onDownloadSuccess={() => {
+            setDecryptDone(false);
+          }}
+          onDownloadError={() => console.warn("Download failed to start")}
+        >
+          Download
+        </Base64Downloader>
+      </div>
+    );
+
+    /*
+           var a = document.createElement("a"); //Create <a>
+          a.href = "data:image/png;base64," + ImageBase64; //Image Base64 Goes here
+          a.download = "Image.png"; //File name Here
+          a.click(); //Downloaded file
+    */
   }
 
   return (
     <Container>
       {body}
+      {decryptPrompt}
       {downloadPrompt}
     </Container>
   );
